@@ -11,6 +11,11 @@ func parseKeyEvent(prefixKey, event string) (affectedKey string) {
 
 	match := eventRegex.FindStringSubmatch(event)
 	result := map[string]string{}
+
+	if len(match) != len(eventRegex.SubexpNames()) {
+		return ""
+	}
+
 	for i, name := range eventRegex.SubexpNames() {
 		if i != 0 {
 			result[name] = match[i]
