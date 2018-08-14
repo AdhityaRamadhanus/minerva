@@ -2,10 +2,11 @@ package redis
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/AdhityaRamadhanus/minerva"
 	"github.com/go-redis/redis"
+	"github.com/pkg/errors"
 )
 
 type Options struct {
@@ -18,7 +19,7 @@ type RedisService struct {
 	client *redis.Client
 }
 
-func NewRedisService(option *Options) *RedisService {
+func New(option *Options) *RedisService {
 	client := redis.NewClient(&redis.Options{
 		Addr:     option.Addr,
 		Password: option.Password,
@@ -30,7 +31,7 @@ func NewRedisService(option *Options) *RedisService {
 	}
 }
 
-func NewRedisServiceWithClient(redisClient *redis.Client) *RedisService {
+func NewWithClient(redisClient *redis.Client) *RedisService {
 	return &RedisService{
 		client: redisClient,
 	}
@@ -38,6 +39,7 @@ func NewRedisServiceWithClient(redisClient *redis.Client) *RedisService {
 
 func (r *RedisService) Get(key string) string {
 	val, err := r.client.Get(key).Result()
+	// supress error and return empty string instead
 	if err != nil {
 		return ""
 	}
@@ -48,18 +50,20 @@ func (r *RedisService) Set(key, value string) error {
 	return r.client.Set(key, value, 0).Err()
 }
 
-func (r *RedisService) Watch(ctx context.Context) (chan minerva.KeyEvent, error) {
-	log.Println("Watching")
-	pubsub := r.client.PSubscribe("__key*__:config*")
+func (r *RedisService) Watch(ctx context.Context, prefixKey string) (chan minerva.KeyEvent, error) {
+	keyspace := fmt.Sprintf("__key*__:%s*", prefixKey)
+	pubsub := r.client.PSubscribe(keyspace)
 
 	// Wait for confirmation that subscription is created before publishing anything.
 	_, err := pubsub.Receive()
 	if err != nil {
-		return nil, err
+		errMessage := fmt.Sprintf("error in creating subcription to keyspace %s", keyspace)
+		return nil, errors.Wrap(err, errMessage)
 	}
 
-	// Go channel which receives messages.
+	// redis key event channel
 	redisEventChannel := pubsub.Channel()
+	// exposed to Minerva, only contains KeyEvent
 	keyEventChannel := make(chan minerva.KeyEvent, 10)
 	go func() {
 		defer pubsub.Close()
@@ -69,14 +73,20 @@ func (r *RedisService) Watch(ctx context.Context) (chan minerva.KeyEvent, error)
 				if !ok {
 					break
 				}
-				keyEvent := parseKeyEvent(msg.Channel, msg.Payload)
-				keyEvent.Value = r.Get("config:" + keyEvent.AffectedKey)
+				keyEvent := minerva.KeyEvent{
+					AffectedKey: parseKeyEvent(prefixKey, msg.Channel),
+					Type:        msg.Payload,
+				}
+				redisKey := fmt.Sprintf("%s:%s", prefixKey, keyEvent.AffectedKey)
+				// due to redis only provide the event and the affected key
+				// we need to fetch the value
+				keyEvent.Value = r.client.Get(redisKey).Val()
 				keyEventChannel <- keyEvent
-				log.Println("Redis Event:", msg.Channel, msg.Payload)
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
+
 	return keyEventChannel, nil
 }

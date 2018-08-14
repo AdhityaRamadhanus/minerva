@@ -1,13 +1,13 @@
 package redis
 
 import (
+	"fmt"
 	"regexp"
-
-	"github.com/AdhityaRamadhanus/minerva"
 )
 
-func parseKeyEvent(event, payload string) minerva.KeyEvent {
-	eventRegex := regexp.MustCompile(`(?m)^__keyspace@0__:config:(?P<key>[^\s]+)$`)
+func parseKeyEvent(prefixKey, event string) (affectedKey string) {
+	eventRegexString := fmt.Sprintf(`(?m)^__keyspace@0__:%s:(?P<key>[^\s]+)$`, prefixKey)
+	eventRegex := regexp.MustCompile(eventRegexString)
 
 	match := eventRegex.FindStringSubmatch(event)
 	result := map[string]string{}
@@ -17,8 +17,5 @@ func parseKeyEvent(event, payload string) minerva.KeyEvent {
 		}
 	}
 
-	return minerva.KeyEvent{
-		Type:        payload,
-		AffectedKey: result["key"],
-	}
+	return result["key"]
 }
