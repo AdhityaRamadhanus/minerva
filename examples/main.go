@@ -10,12 +10,15 @@ import (
 )
 
 func main() {
-	redisService := redis.NewRedisService(&redis.Options{
+	redisService := redis.New(&redis.Options{
 		Addr: "localhost:6379",
 		DB:   0,
 	})
 
-	minerva := minerva.New(redisService)
+	minerva := minerva.NewWithOptions(redisService, minerva.Options{
+		// default to config
+		PrefixKey: "minerva-config",
+	})
 	minerva.Watch()
 	for {
 		if minerva.Get("is-maintenance") == "true" {
