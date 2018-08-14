@@ -1,11 +1,14 @@
-.PHONY: default 
+.PHONY: default install test
 
 PKG_NAME = github.com/AdhityaRamadhanus/minerva
 TEST_PKG = ${PKG_NAME}/redis
 
 # target #
 
-default: test
+default: install test
+
+install:
+	go get -t ./...
 
 # Test Packages
 
