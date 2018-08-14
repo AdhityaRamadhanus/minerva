@@ -55,10 +55,10 @@ func main() {
 
 Todo
 ----------------
-* Dynamic prefix key
+* ~~Dynamic prefix key~~
 * Bootstrap config value
 * CLI to manage configuration
-* More robust and proper error handling
+* ~~More robust and proper error handling~~
 * Add debouncing in getting key value on parsing key event
 * Add test
 * Add CI

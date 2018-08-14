@@ -31,12 +31,6 @@ func New(option *Options) *RedisService {
 	}
 }
 
-func NewWithClient(redisClient *redis.Client) *RedisService {
-	return &RedisService{
-		client: redisClient,
-	}
-}
-
 func (r *RedisService) Get(key string) string {
 	val, err := r.client.Get(key).Result()
 	// supress error and return empty string instead
