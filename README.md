@@ -1,4 +1,6 @@
 # minerva
+[![Build Status](https://travis-ci.org/AdhityaRamadhanus/minerva.svg?branch=master)](https://travis-ci.org/AdhityaRamadhanus/minerva)
+
 configuration management using redis
 
 <p>
