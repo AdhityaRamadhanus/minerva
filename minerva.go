@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Options hold various configuration for minerva
 type Options struct {
 	PrefixKey string
 }
@@ -15,6 +16,7 @@ var defaultOptions = Options{
 	PrefixKey: "config",
 }
 
+// Minerva is the main struct that glue all components for creating remote config
 type Minerva struct {
 	remoteClient RemoteClient
 	remoteConfig map[string]string
@@ -23,6 +25,7 @@ type Minerva struct {
 	options      Options
 }
 
+// New create Minerva with default Options
 func New(remoteClient RemoteClient) *Minerva {
 	return &Minerva{
 		remoteClient: remoteClient,
@@ -31,6 +34,7 @@ func New(remoteClient RemoteClient) *Minerva {
 	}
 }
 
+// NewWithOptions create Minerva with custom options
 func NewWithOptions(remoteClient RemoteClient, options Options) *Minerva {
 	return &Minerva{
 		remoteClient: remoteClient,
@@ -39,6 +43,7 @@ func NewWithOptions(remoteClient RemoteClient, options Options) *Minerva {
 	}
 }
 
+// Get a key value in remote config
 func (m *Minerva) Get(key string) string {
 	_, isKeyPresent := m.remoteConfig[key]
 	remoteConfigKey := fmt.Sprintf("%s:%s", m.options.PrefixKey, key)
@@ -48,6 +53,7 @@ func (m *Minerva) Get(key string) string {
 	return m.remoteConfig[key]
 }
 
+// Watch all changes happening on remote config and apply it on local config
 func (m *Minerva) Watch() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	m.context = ctx
@@ -69,6 +75,7 @@ func (m *Minerva) Watch() error {
 	return errors.Wrap(err, "Error in watching key event")
 }
 
+// Close watcher
 func (m *Minerva) Close() {
 	m.cancelFunc()
 }

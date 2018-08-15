@@ -62,8 +62,8 @@ Todo
 * CLI to manage configuration
 * ~~More robust and proper error handling~~
 * Add debouncing in getting key value on parsing key event
-* Add test
-* Add CI
+* ~~Add test~~
+* ~~Add CI~~
 
 License
 ----
