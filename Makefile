@@ -5,10 +5,7 @@ TEST_PKG = ${PKG_NAME}/redis
 
 # target #
 
-default: install test
-
-install:
-	go get -t ./...
+default: test
 
 # Test Packages
 
